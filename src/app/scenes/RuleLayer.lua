@@ -190,6 +190,19 @@ function RuleLayer:swap( bubbleA, bubbleB )
     local aPosX,aPosY = bubbleA.posX, bubbleA.posY
     local bPosX,bPosY = bubbleB.posX, bubbleB.posY
 
+    --判断是否相邻
+    if aPosX == bPosX and math.abs(aPosY - bPosY) == 1 then
+        --continue
+    elseif aPosY == bPosY and math.abs(aPosX - bPosX) == 1 then
+        --continue
+    else
+      --不相邻
+       return
+    end
+
+    
+
+    -- 先进行位置交换
     self.gridMap[aPosX][aPosY] = bubbleB
     bubbleB.posX=aPosX
     bubbleB.posY=aPosY
@@ -197,6 +210,46 @@ function RuleLayer:swap( bubbleA, bubbleB )
     self.gridMap[bPosX][bPosY] = bubbleA
     bubbleA.posX=bPosX
     bubbleA.posY=bPosY
+
+    --判断能否消除 ， 若不能消除 ，就恢复交换
+    if self:checkAndExpode(true) == false  then
+      --恢复
+      self.gridMap[aPosX][aPosY] = bubbleA
+      bubbleA.posX=aPosX
+      bubbleA.posY=aPosY
+
+      self.gridMap[bPosX][bPosY] = bubbleB
+      bubbleB.posX=bPosX
+      bubbleB.posY=bPosY
+
+      --显示动画
+      local sequA = cc.Sequence:create(cc.CallFunc:create(function() 
+                                                             bubbleA:moveToGrid(bPosX, bPosY)
+                                                          end
+                                                          ),
+                                       cc.DelayTime:create(0.3), 
+                                       cc.CallFunc:create(function() 
+                                                             bubbleA:moveToGrid(aPosX, aPosY)
+                                                          end
+                                                          )
+
+                                      )
+      bubbleA:runAction(sequA)
+
+      local sequB = cc.Sequence:create(cc.CallFunc:create(function() 
+                                                             bubbleB:moveToGrid(aPosX, aPosY)
+                                                          end
+                                                          ),
+                                       cc.DelayTime:create(0.3), 
+                                       cc.CallFunc:create(function() 
+                                                             bubbleB:moveToGrid(bPosX, bPosY)
+                                                          end
+                                                          )
+
+                                      )
+      bubbleB:runAction(sequB)
+      return
+    end
 
     --移动
     bubbleA:moveToGrid(bPosX, bPosY)
@@ -248,7 +301,7 @@ function RuleLayer:fillNext()
 
 end
 
-function RuleLayer:checkAndExpode()
+function RuleLayer:checkAndExpode(isCheck)
 	 
 
   print("check and explode")
@@ -281,7 +334,10 @@ function RuleLayer:checkAndExpode()
              counter = counter + 1
 
              if col == self.ColCount and counter >=3 then
-               
+                
+                if isCheck ~= nil and isCheck == true then
+                   return true
+                end
 
                 for m = starIndex,starIndex+counter-1 do
                   table.insert(self.explodeList, self.gridMap[row][m] )
@@ -294,6 +350,10 @@ function RuleLayer:checkAndExpode()
               end
          else
               if counter >=3 then
+
+                if isCheck ~= nil and isCheck == true then
+                   return true
+                end
                 
                 for m = starIndex,starIndex+counter-1 do
                   table.insert(self.explodeList, self.gridMap[row][m] )
@@ -333,6 +393,10 @@ function RuleLayer:checkAndExpode()
 
              if row == self.RowCount and counter >=3 then
 
+                if isCheck ~= nil and isCheck == true then
+                   return true
+                end
+
                 for k = starIndex,(starIndex+counter-1) do
                   table.insert(self.explodeList, self.gridMap[k][col] )
                   self.gridMap[k][col]= nil
@@ -346,6 +410,10 @@ function RuleLayer:checkAndExpode()
 
          else
              if counter >=3 then
+
+                if isCheck ~= nil and isCheck == true then
+                   return true
+                end
                
                 for k = starIndex,(starIndex+counter-1) do
                   table.insert(self.explodeList, self.gridMap[k][col] )
