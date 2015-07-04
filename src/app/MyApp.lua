@@ -1,4 +1,7 @@
-
+--
+-- Author: shenzhan
+-- Date: 2015-07-01 17:38:18
+--email:superzhan@yeah.net
 require("config")
 require("cocos.init")
 require("framework.init")

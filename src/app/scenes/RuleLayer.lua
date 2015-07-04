@@ -1,9 +1,10 @@
 --
 -- Author: shenzhan
 -- Date: 2015-07-01 17:38:18
---
+--email:superzhan@yeah.net
 --[[
     游戏规则控制层
+    游戏的主要逻辑控制层
 ]]
 
 local Bubble=require("app.scenes.Bubble")
@@ -17,12 +18,15 @@ function RuleLayer:ctor()
 	print("rule ctor")
   math.randomseed(os.time()) 
 
+  --泡泡的行列个数
 	self.RowCount = 9 
 	self.ColCount = 7
 
+  --泡泡的排列位置
 	self.startPos=cc.p(45,100)
 	self.bubbleLen = 65 
-
+ 
+  --泡泡的列表容器  和 选择列表
 	self.bubbleList={}
   self.explodeList={}
 
@@ -32,7 +36,7 @@ function RuleLayer:ctor()
 	self.preBubble = nil
 	self.lastBubble = nil
 
-  self.isCanTouch =false
+  self.isCanTouch =false  -- 防止在动画播放过程中 ，进行游戏操作
 
 
   --score UI --------------------
@@ -56,9 +60,8 @@ function RuleLayer:ctor()
   self.scoreLabel=scoreLabel
    --score UI --------------------
  
-      
+     --[[添加游戏的触摸实践 ]] 
     self:setTouchEnabled(true)
-
      -- 注册触摸事件
     self:addNodeEventListener(cc.NODE_TOUCH_EVENT, function(event)
 	    -- event.name 是触摸事件的状态：began, moved, ended, cancelled
@@ -74,7 +77,7 @@ function RuleLayer:ctor()
             if self.isCanTouch == false then
               return true
             end
-
+            --记录第一个泡泡
             self.preBubble = self:getBubbleByPos(event.x, event.y)
             print("begin",self.preBubble.ID)
  
@@ -89,7 +92,7 @@ function RuleLayer:ctor()
               print("ended",self.lastBubble.ID)
 
              if self.lastBubble ~= nil then
-             	
+             	--记录第二个泡泡 然后进行交换
              	self:swap(self.preBubble,self.lastBubble)
 
              end
@@ -103,7 +106,7 @@ function RuleLayer:ctor()
 
 end
 
-
+--[[根据点击的位置 来获取响应的泡泡]]
 function  RuleLayer:getBubbleByPos( x ,y )
    local bubbleCount = #self.bubbleList
    for i=1,bubbleCount do
@@ -119,9 +122,12 @@ function  RuleLayer:getBubbleByPos( x ,y )
    return nil
 end
 
+--[[游戏出事化 
+   创建和设置场景中的格子和泡泡
+]]
 function RuleLayer:initRule( )
 	-- body
-	  self.gridMap={}
+	  self.gridMap={}  -- 一个二维矩阵 表示场景中的泡泡矩阵
 
 
     for  row=1,self.RowCount do
@@ -152,7 +158,7 @@ function RuleLayer:initRule( )
 
     end
 
-    --初始化消除
+    --初始化消除 上面初始化的结果可能产生 可以消除的情况 ，  
     local sequ = cc.Sequence:create(cc.DelayTime:create(0.3), 
                                     cc.CallFunc:create(
                                         function() 
@@ -172,7 +178,7 @@ function RuleLayer:initRule( )
 end
 
 
-
+--[[交换两个泡泡]]
 function RuleLayer:swap( bubbleA, bubbleB )
 	-- body
 	print("swap")
@@ -214,7 +220,7 @@ function RuleLayer:swap( bubbleA, bubbleB )
       bubbleB.posX=bPosX
       bubbleB.posY=bPosY
 
-      --显示动画
+      --显示动画  A B  两个泡泡相互交互 然后又恢复交换的动画
       local sequA = cc.Sequence:create(cc.CallFunc:create(function() 
                                                              bubbleA:moveToGrid(bPosX, bPosY)
                                                           end
@@ -243,8 +249,8 @@ function RuleLayer:swap( bubbleA, bubbleB )
       return
     end
 
-    self.isCanTouch = false
-    --移动
+    self.isCanTouch = false  -- 符合交换条件  设置标志位
+    --移动 A B 两个泡泡 交换动画
     bubbleA:moveToGrid(bPosX, bPosY)
     bubbleB:moveToGrid(aPosX, aPosY)
 
@@ -268,40 +274,19 @@ function RuleLayer:swap( bubbleA, bubbleB )
 
 end
 
-function RuleLayer:fillNext()
 
-
-    local sequ = cc.Sequence:create(cc.DelayTime:create(0.4), 
-                                    cc.CallFunc:create(
-                                        function() 
-
-                                          local haveLine=false
-                                          while self:checkAndExpode() do
-                                            haveLine = true
-                                          end
-                                          
-                                          if haveLine ==false then
-                                            
-                                            self.isCanTouch =true
-
-                                            return
-                                          end
-
-                                          self:FillNewItem()
-                                        end)
-
-                                    )
-    --check
-    self:runAction(sequ)
-
-
-end
-
+--[[
+  泡泡消除检测
+  先进行行检测 然后再进行列检测
+  isCheck == true  表示检测模式 不消除
+  isCheck == nil or false  检测 并 消除可以消除的泡泡
+]]
 function RuleLayer:checkAndExpode(isCheck)
 	 
 
   print("check and explode")
-
+   
+  -- 获取格子的ID
    function getGridID(x,y)
       if self.gridMap[x][y] == nil then
          return 0
@@ -328,13 +313,16 @@ function RuleLayer:checkAndExpode(isCheck)
 
          if getGridID(row,col)>0 and getGridID(row,col) == bMark then
              counter = counter + 1
-
-             if col == self.ColCount and counter >=3 then
+              
+              --检测完了一行
+             if col == self.ColCount and counter >=3 then  
                 
+                --检查模式 不消除
                 if isCheck ~= nil and isCheck == true then
                    return true
                 end
-
+                
+                --标记可消除的泡泡
                 for m = starIndex,starIndex+counter-1 do
                   table.insert(self.explodeList, self.gridMap[row][m] )
                   self.gridMap[row][m] = nil
@@ -351,6 +339,7 @@ function RuleLayer:checkAndExpode(isCheck)
                    return true
                 end
                 
+                --标记可消除的泡泡
                 for m = starIndex,starIndex+counter-1 do
                   table.insert(self.explodeList, self.gridMap[row][m] )
                   self.gridMap[row][m] = nil
@@ -434,7 +423,9 @@ function RuleLayer:checkAndExpode(isCheck)
 end
 
 
-
+--[[
+   把标记的泡泡进行消除
+]]
 function  RuleLayer:explodeBubble()
   
   if  #self.explodeList <1 then
@@ -446,7 +437,7 @@ function  RuleLayer:explodeBubble()
 
   for i=1,#self.explodeList do
       
-
+    
     local explodePati=cc.ParticleSystemQuad:create("bubbleExplode.plist")
     local posX ,posY = self.explodeList[i]:getPosition()
      explodePati:pos(posX, posY)
@@ -461,6 +452,10 @@ function  RuleLayer:explodeBubble()
 
 end
 
+--[[填充消除后的空缺的泡泡
+    在每一列中 把上边的泡泡向下移动
+
+]]
 function RuleLayer:FillNewItem( )
 	  
 
@@ -512,12 +507,46 @@ function RuleLayer:FillNewItem( )
 
   self.explodeList={}
 
-  self:fillNext()
+  self:fillNext()  -- 进行递归消除
 
 end
 
-function RuleLayer:showScore()
-	-- body
+--[[
+   填充完后 再进行检测 
+   如果又可以消除 这再次进行 消除 和 填充
+
+   函数  checkAndExplode()  FillNewItem()  fillNext()  构成了一个递归调用
+         递归入口 是 FillNewItem 递归出口在fillNext() 中的  if haveLine ==false then return
+]]
+function RuleLayer:fillNext()
+
+
+    local sequ = cc.Sequence:create(cc.DelayTime:create(0.4), 
+                                    cc.CallFunc:create(
+                                        function() 
+
+                                          local haveLine=false
+                                          while self:checkAndExpode() do
+                                            haveLine = true
+                                          end
+                                          
+                                          if haveLine ==false then
+                                            
+                                            self.isCanTouch =true
+
+                                            return
+                                          end
+
+                                          self:FillNewItem()
+                                        end)
+
+                                    )
+    --check
+    self:runAction(sequ)
+
+
 end
+
+
 
 return RuleLayer

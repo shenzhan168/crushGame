@@ -1,7 +1,11 @@
 --
--- Author: Your Name
--- Date: 2015-07-01 17:38:07
---
+-- Author: shenzhan
+-- Date: 2015-07-01 17:38:18
+--email:superzhan@yeah.net
+
+--[[
+   每一个泡泡的个体对象
+]]
 
 local Bubble = class("Bubble", function()
     return display.newSprite()
@@ -9,15 +13,13 @@ end)
 
 function Bubble:ctor()
 	self.ID  = 0
-	self.posX = 0
+	self.posX = 0  --对应 泡泡矩阵中的 X Y 的位置
 	self.posY = 0
-	self.RuleLayer={}
+	self.RuleLayer={}  
 end
 
-function Bubble:initBubble( ... )
-	-- body
-end
 
+--[[设置个体泡泡的属性数据]]
 function Bubble:setData( ID)
 	-- body
 	self.ID= ID
@@ -47,8 +49,5 @@ function Bubble:moveToGrid(x , y)
 
 end
 
-function  Bubble:expldeBubble( )
-	-- body
-end
 
 return Bubble
