@@ -31,6 +31,28 @@ function RuleLayer:ctor()
 
 	self.preBubble = nil
 	self.lastBubble = nil
+
+
+  --score UI --------------------
+  self.score =0
+  local label = display.newTTFLabel({
+    text = "score:",
+    size = 64,
+    x = 100,
+    y = 750
+  })
+  self:addChild(label)
+
+  local scoreLabel = display.newTTFLabel({
+    text = "001",
+    size = 64,
+    x = 240,
+    y = 750,
+    align = cc.TEXT_ALIGNMENT_LEFT
+  })
+  self:addChild(scoreLabel)
+  self.scoreLabel=scoreLabel
+   --score UI --------------------
  
       
     self:setTouchEnabled(true)
@@ -354,6 +376,9 @@ function  RuleLayer:explodeBubble()
   if  #self.explodeList <1 then
     return
   end
+
+  self.score = self.score + #self.explodeList
+  self.scoreLabel:setString(self.score)
 
   for i=1,#self.explodeList do
       
