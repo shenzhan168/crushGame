@@ -32,6 +32,8 @@ function RuleLayer:ctor()
 	self.preBubble = nil
 	self.lastBubble = nil
 
+  self.isCanTouch =false
+
 
   --score UI --------------------
   self.score =0
@@ -69,6 +71,10 @@ function RuleLayer:ctor()
 	    -- 则必须返回 true
 	    if event.name == "began" then
             
+            if self.isCanTouch == false then
+              return true
+            end
+
             self.preBubble = self:getBubbleByPos(event.x, event.y)
             print("begin",self.preBubble.ID)
  
@@ -146,28 +152,22 @@ function RuleLayer:initRule( )
 
     end
 
+    --初始化消除
+    local sequ = cc.Sequence:create(cc.DelayTime:create(0.3), 
+                                    cc.CallFunc:create(
+                                        function() 
 
-     -- local map=self.gridMap
-     -- while self:checkAndExpode(true) do
-       
-     --    for row=1,self.RowCount do
-     --        for col=1, self.ColCount do
-     --            local bubble=map[row][col]
-     --             print("while ID",bubble.ID ,row, col)
-     --             bubble:setData( math.random(1,5) )
-     --        end
-     --    end
-     --    self.gridMap = map
-     -- end
+                                          while self:checkAndExpode() do
+                                          end
+                                        end),
+                                    cc.CallFunc:create(
+                                        function() 
+                                            self:FillNewItem()
+                                        end)
 
-    
-     
-     -- while self:checkAndExpode() do
-       
-     -- end
-
-     --self:checkAndExpode()
-  
+                                    )
+    --check
+    self:runAction(sequ)
 
 end
 
@@ -176,15 +176,7 @@ end
 function RuleLayer:swap( bubbleA, bubbleB )
 	-- body
 	print("swap")
-
-	-- local aX,aY =bubbleA:getPosition()
-	-- local bX,bY = bubbleB:getPosition()
     
- --    local moveA = cc.MoveTo:create(0.3, cc.p(bX,bY))
- --    local moveB = cc.MoveTo:create(0.3, cc.p(aX,aY))
-
- --    bubbleA:runAction(moveA)
- --    bubbleB:runAction(moveB)
 
     --交换矩阵中的位置 修改位置属性
     local aPosX,aPosY = bubbleA.posX, bubbleA.posY
@@ -251,6 +243,7 @@ function RuleLayer:swap( bubbleA, bubbleB )
       return
     end
 
+    self.isCanTouch = false
     --移动
     bubbleA:moveToGrid(bPosX, bPosY)
     bubbleB:moveToGrid(aPosX, aPosY)
@@ -288,6 +281,9 @@ function RuleLayer:fillNext()
                                           end
                                           
                                           if haveLine ==false then
+                                            
+                                            self.isCanTouch =true
+
                                             return
                                           end
 
@@ -466,37 +462,7 @@ function  RuleLayer:explodeBubble()
 end
 
 function RuleLayer:FillNewItem( )
-	  --[[根据空缺 把每列的 bubble 下移]]
-
-    -- for col=1 , self.ColCount do
-       
-    --    --计算空缺个数
-    --    local blockCount = 0
-    --    local endIndex = 1
-    --    for row=1, self.RowCount do
-    --        if self.gridMap[row][col] == nil then
-    --          blockCount = blockCount +1
-    --          endIndex = row
-    --        end
-    --    end
-
-    --    if blockCount >=1  then
-    --       --向前填充
-    --      for i=1,blockCount do
-    --         local rowIndex = endIndex + i
-    --         if rowIndex <= self.RowCount then
-    --             local toRow = endIndex -blockCount +i
-    --             self.gridMap[rowIndex][col]:moveToGrid(toRow,col)
-    --             self.gridMap[rowIndex][col].posX = toRow
-    --             self.gridMap[toRow][col] = self.gridMap[rowIndex][col]
-    --             self.gridMap[rowIndex][col] =nil
-
-    --         end
-
-    --      end
-    --    end
-
-    -- end
+	  
 
     local useIndex=1
 
