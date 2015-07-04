@@ -12,6 +12,8 @@ function MainScene:ctor()
      -- local itemFrame=display.newSpriteFrame("Item1.png")
      -- local itemSprite=display.newSprite(itemFrame,display.cx,display.cy)
      --                  :addTo(self)
+     local particle = cc.ParticleSystemQuad:create("gameBack.plist")
+    self:addChild(particle)
 
      local ruleLayer=RuleLayer.new()
      self:addChild(ruleLayer)

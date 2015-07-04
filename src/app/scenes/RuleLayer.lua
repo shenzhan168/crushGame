@@ -356,9 +356,18 @@ function  RuleLayer:explodeBubble()
   end
 
   for i=1,#self.explodeList do
-      local x, y =self.explodeList[i].posX , self.explodeList[i].posY
+      
+
+    local explodePati=cc.ParticleSystemQuad:create("bubbleExplode.plist")
+    local posX ,posY = self.explodeList[i]:getPosition()
+     explodePati:pos(posX, posY)
+     explodePati:setAutoRemoveOnFinish(true)
+     self:addChild(explodePati,6)
+
+     local x, y =self.explodeList[i].posX , self.explodeList[i].posY
       self.gridMap[x][y] = nil
       self.explodeList[i]:pos(1, 3000)
+
   end
 
 end
